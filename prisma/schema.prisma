@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// -----------------------------------------------------
+//  Job Portal - Prisma Schema (PostgreSQL)
+// -----------------------------------------------------
 
 generator client {
   provider = "prisma-client-js"
@@ -11,4 +9,433 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------
+// ENUM DEFINITIONS
+// -----------------------------------------------------
+
+enum UserRole {
+  admin
+  employer
+  job_seeker
+}
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+  deactivated
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  contract
+  internship
+  temporary
+  freelance
+}
+
+enum JobStatus {
+  open
+  closed
+  draft
+}
+
+enum ApplicationStatus {
+  applied
+  shortlisted
+  interviewed
+  rejected
+  hired
+}
+
+enum SubscriptionStatus {
+  active
+  cancelled
+  expired
+  trial
+}
+
+enum ExperienceLevel {
+  entry
+  junior
+  mid
+  senior
+  lead
+}
+
+enum CompanySize {
+  startup
+  small
+  medium
+  large
+  enterprise
+}
+
+enum ReviewType {
+  employer_review
+  candidate_review
+}
+
+// -----------------------------------------------------
+// USER MODEL
+// -----------------------------------------------------
+
+model User {
+  id               String     @id @default(cuid())
+  name             String
+  email            String     @unique
+  passwordHash     String?
+  role             UserRole   @default(job_seeker)
+  status           UserStatus @default(inactive)
+  verified         Boolean    @default(false)
+  phoneNumber      String?
+  profileComplete  Boolean    @default(false)
+  lastLogin        DateTime?
+  twoFactorEnabled Boolean    @default(false)
+
+  jobSeekerProfile   JobSeekerProfile?
+  employerProfile    EmployerProfile?
+  notifications      Notification[]
+  applications       JobApplication[]
+  savedJobs          SavedJob[]
+  companies          Company[]
+  jobs               Job[]
+  reviewsCreated     Review[]            @relation("reviews_created")
+  reviewsReceived    Review[]            @relation("reviews_received")
+  interviewFeedbacks InterviewFeedback[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// -----------------------------------------------------
+// JOB SEEKER PROFILE
+// -----------------------------------------------------
+
+model JobSeekerProfile {
+  id                String  @id @default(cuid())
+  headline          String
+  bio               String
+  totalExperience   Int
+  currentLocation   String
+  preferredLocation String
+  expectedSalary    Int
+  resumeUrl         String?
+  avatarUrl         String?
+  linkedInUrl       String?
+  githubUrl         String?
+  portfolioUrl      String?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  skills JobSeekerSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_seeker_profiles")
+}
+
+// -------------------------------------------------------
+// COMPANY & EMPLOYER PROFILES
+// -------------------------------------------------------
+
+model Company {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  website     String?
+  logoUrl     String?
+  verified    Boolean      @default(false)
+  city        String?
+  country     String?
+  industry    String?
+  companySize CompanySize?
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  employerProfiles EmployerProfile[]
+  jobs             Job[]
+  subscriptions    Subscription[]
+  reviews          Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
+}
+
+model EmployerProfile {
+  id       String  @id @default(cuid())
+  position String?
+
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  jobs Job[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("employer_profiles")
+}
+
+// -----------------------------------------------------
+// JOB POSTINGS
+// -----------------------------------------------------
+
+model Job {
+  id              String           @id @default(cuid())
+  title           String
+  description     String
+  employmentType  EmploymentType
+  minSalary       Int?
+  maxSalary       Int?
+  location        String?
+  locationType    String?
+  status          JobStatus        @default(open)
+  experienceLevel ExperienceLevel?
+  deadline        DateTime?
+  views           Int              @default(0)
+
+  companyId         String
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employerId        String
+  employer          User            @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  employerProfile   EmployerProfile @relation(fields: [employerProfileId], references: [id])
+  employerProfileId String
+
+  applications  JobApplication[]
+  savedBy       SavedJob[]
+  jobSkills     JobSkill[]
+  viewAnalytics JobViewAnalytics?
+  statusHistory JobStatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("jobs")
+}
+
+// -----------------------------------------------------
+// JOB APPLICATIONS
+// -----------------------------------------------------
+
+model JobApplication {
+  id              String            @id @default(cuid())
+  resumeUrl       String?
+  coverLetter     String?
+  status          ApplicationStatus @default(applied)
+  appliedAt       DateTime          @default(now())
+  rating          Int?
+  rejectionReason String?
+
+  seekerId String
+  seeker   User   @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  interviewFeedback InterviewFeedback?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_applications")
+}
+
+// -----------------------------------------------------
+// SAVED JOBS
+// -----------------------------------------------------
+
+model SavedJob {
+  id       String @id @default(cuid())
+  seekerId String
+  seeker   User   @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([seekerId, jobId])
+  @@map("saved_jobs")
+}
+
+// -----------------------------------------------------
+// SUBSCRIPTION & PLANS
+// -----------------------------------------------------
+
+model Plan {
+  id              String @id @default(cuid())
+  name            String
+  price           Float
+  jobPostLimit    Int
+  resumeViewLimit Int
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime
+  status    SubscriptionStatus @default(active)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  planId    String
+  plan      Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+// -----------------------------------------------------
+// NOTIFICATIONS
+// -----------------------------------------------------
+
+model Notification {
+  id      String  @id @default(cuid())
+  title   String
+  message String
+  type    String?
+  read    Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+// -----------------------------------------------------
+// SKILLS MANAGEMENT
+// -----------------------------------------------------
+
+model Skill {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  category String?
+
+  jobSeekerSkills JobSeekerSkill[]
+  jobSkills       JobSkill[]
+
+  @@map("skills")
+}
+
+model JobSeekerSkill {
+  id      String  @id @default(cuid())
+  skill   String
+  skillId String?
+
+  userId      String
+  user        JobSeekerProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillRecord Skill?           @relation(fields: [skillId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@map("job_seeker_skills")
+}
+
+model JobSkill {
+  id      String @id @default(cuid())
+  jobId   String
+  job     Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@map("job_skills")
+}
+
+// -----------------------------------------------------
+// JOB STATUS TRACKING
+// -----------------------------------------------------
+
+model JobStatusHistory {
+  id        String    @id @default(cuid())
+  jobId     String
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    JobStatus
+  changedBy String
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  @@map("job_status_histories")
+}
+
+// -----------------------------------------------------
+// INTERVIEW & FEEDBACK
+// -----------------------------------------------------
+
+model InterviewFeedback {
+  id            String         @id @default(cuid())
+  applicationId String         @unique
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  rating        Int?
+  feedback      String?
+  interviewDate DateTime?
+  createdBy     String
+  createdByUser User           @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("interview_feedbacks")
+}
+
+// -------------------------------------------------------
+// REVIEWS & RATINGS
+// -------------------------------------------------------
+
+model Review {
+  id         String     @id @default(cuid())
+  rating     Int
+  comment    String?
+  reviewType ReviewType
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  reviewById   String
+  reviewBy     User   @relation("reviews_created", fields: [reviewById], references: [id], onDelete: Cascade)
+  reviewedById String
+  reviewedBy   User   @relation("reviews_received", fields: [reviewedById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("reviews")
+}
+
+// -----------------------------------------------------
+// JOB VIEW ANALYTICS
+// -----------------------------------------------------
+
+model JobViewAnalytics {
+  id               String    @id @default(cuid())
+  jobId            String    @unique
+  job              Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  viewCount        Int       @default(0)
+  clickCount       Int       @default(0)
+  applicationCount Int       @default(0)
+  lastViewedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_view_analytics")
 }
