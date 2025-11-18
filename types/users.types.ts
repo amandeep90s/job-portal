@@ -1,12 +1,6 @@
-// Users feature types
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  verified: boolean;
-  status: string;
-  createdAt: Date;
+export interface EmployerProfilePayload {
+  position: string;
+  companyId: string;
 }
 
 export interface JobSeekerProfilePayload {
@@ -23,13 +17,19 @@ export interface JobSeekerProfilePayload {
   portfolioUrl?: string;
 }
 
-export interface EmployerProfilePayload {
-  position: string;
-  companyId: string;
-}
-
 export interface UpdateUserPayload {
   name?: string;
   phoneNumber?: string;
   twoFactorEnabled?: boolean;
+}
+
+// Users feature types
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  verified: boolean;
+  status: string;
+  createdAt: Date;
 }

@@ -7,11 +7,6 @@ export interface PlanDetail {
   resumeViewLimit: number;
 }
 
-export interface SubscriptionPayload {
-  planId: string;
-  companyId: string;
-}
-
 export interface SubscriptionDetail {
   id: string;
   planName: string;
@@ -19,6 +14,11 @@ export interface SubscriptionDetail {
   endDate: Date;
   status: string;
   companyName: string;
+}
+
+export interface SubscriptionPayload {
+  planId: string;
+  companyId: string;
 }
 
 export interface UpdateSubscriptionPayload {

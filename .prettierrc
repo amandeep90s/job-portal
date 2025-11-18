@@ -5,6 +5,8 @@
   "printWidth": 120,
   "tabWidth": 2,
   "useTabs": false,
+  "arrowParens": "always",
+  "bracketSpacing": true,
   "plugins": ["prettier-plugin-tailwindcss"],
   "tailwindFunctions": ["clsx", "cn", "twMerge", "tw"]
 }

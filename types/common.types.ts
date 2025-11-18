@@ -1,17 +1,15 @@
-// Common type definitions used across the application
+export type ApiError = {
+  code: string;
+  message: string;
+  statusCode: number;
+};
 
+// Common type definitions used across the application
 export type ApiResponse<T = null> = {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
-};
-
-export type PaginationParams = {
-  page: number;
-  limit: number;
-  sortBy?: string;
-  order?: "asc" | "desc";
 };
 
 export type PaginatedResponse<T> = {
@@ -22,10 +20,11 @@ export type PaginatedResponse<T> = {
   pages: number;
 };
 
-export type ApiError = {
-  code: string;
-  message: string;
-  statusCode: number;
+export type PaginationParams = {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
 };
 
 export type UserSession = {

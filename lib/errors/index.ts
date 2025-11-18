@@ -11,10 +11,24 @@ export class AppError extends Error {
   }
 }
 
-export class ValidationError extends AppError {
+export class ConflictError extends AppError {
   constructor(message: string) {
-    super(400, "VALIDATION_ERROR", message);
-    this.name = "ValidationError";
+    super(409, "CONFLICT", message);
+    this.name = "ConflictError";
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = "Forbidden") {
+    super(403, "FORBIDDEN", message);
+    this.name = "ForbiddenError";
+  }
+}
+
+export class InternalServerError extends AppError {
+  constructor(message = "Internal Server Error") {
+    super(500, "INTERNAL_SERVER_ERROR", message);
+    this.name = "InternalServerError";
   }
 }
 
@@ -32,23 +46,9 @@ export class UnauthorizedError extends AppError {
   }
 }
 
-export class ForbiddenError extends AppError {
-  constructor(message = "Forbidden") {
-    super(403, "FORBIDDEN", message);
-    this.name = "ForbiddenError";
-  }
-}
-
-export class ConflictError extends AppError {
+export class ValidationError extends AppError {
   constructor(message: string) {
-    super(409, "CONFLICT", message);
-    this.name = "ConflictError";
-  }
-}
-
-export class InternalServerError extends AppError {
-  constructor(message = "Internal Server Error") {
-    super(500, "INTERNAL_SERVER_ERROR", message);
-    this.name = "InternalServerError";
+    super(400, "VALIDATION_ERROR", message);
+    this.name = "ValidationError";
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import * as MenubarPrimitive from "@radix-ui/react-menubar";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
@@ -218,19 +219,19 @@ function MenubarSubContent({ className, ...props }: React.ComponentProps<typeof 
 
 export {
   Menubar,
-  MenubarPortal,
-  MenubarMenu,
-  MenubarTrigger,
   MenubarContent,
-  MenubarGroup,
-  MenubarSeparator,
-  MenubarLabel,
-  MenubarItem,
-  MenubarShortcut,
   MenubarCheckboxItem,
+  MenubarGroup,
+  MenubarItem,
+  MenubarLabel,
+  MenubarMenu,
+  MenubarPortal,
   MenubarRadioGroup,
   MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
   MenubarSub,
-  MenubarSubTrigger,
+  MenubarTrigger,
   MenubarSubContent,
+  MenubarSubTrigger,
 };

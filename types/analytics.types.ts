@@ -1,13 +1,3 @@
-// Analytics feature types
-export interface JobAnalytics {
-  jobId: string;
-  viewCount: number;
-  clickCount: number;
-  applicationCount: number;
-  conversionRate: number;
-  lastViewedAt?: Date;
-}
-
 export interface AnalyticsFilters {
   dateRange?: {
     startDate: Date;
@@ -21,4 +11,14 @@ export interface CompanyAnalytics {
   totalApplications: number;
   totalHires: number;
   averageTimeToHire: number;
+}
+
+// Analytics feature types
+export interface JobAnalytics {
+  jobId: string;
+  viewCount: number;
+  clickCount: number;
+  applicationCount: number;
+  conversionRate: number;
+  lastViewedAt?: Date;
 }

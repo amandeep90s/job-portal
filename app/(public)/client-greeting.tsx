@@ -1,7 +1,7 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 // <-- hooks can only be used in client components
-import { Button } from "@/components/ui/button";
 import { trpc } from "@/trpc/client";
 
 export function ClientGreeting() {

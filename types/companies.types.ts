@@ -1,3 +1,14 @@
+export interface CompanyDetail {
+  id: string;
+  name: string;
+  description?: string;
+  website?: string;
+  logoUrl?: string;
+  verified: boolean;
+  industry?: string;
+  companySize?: string;
+}
+
 // Companies feature types
 export interface CompanyPayload {
   name: string;
@@ -6,17 +17,6 @@ export interface CompanyPayload {
   logoUrl?: string;
   city?: string;
   country?: string;
-  industry?: string;
-  companySize?: string;
-}
-
-export interface CompanyDetail {
-  id: string;
-  name: string;
-  description?: string;
-  website?: string;
-  logoUrl?: string;
-  verified: boolean;
   industry?: string;
   companySize?: string;
 }
