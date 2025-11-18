@@ -1,10 +1,9 @@
 export * from "./analytics.types";
-
 export * from "./applications.types";
-// Global type definitions
 export * from "./auth.types";
 export * from "./common.types";
 export * from "./companies.types";
+export * from "./env.types";
 export * from "./jobs.types";
 export * from "./notifications.types";
 export * from "./reviews.types";

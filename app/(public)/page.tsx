@@ -2,19 +2,13 @@ import { Suspense } from "react";
 
 import { ErrorBoundary } from "react-error-boundary";
 
-import { HydrateClient, trpc } from "@/trpc/server";
-
-import { ClientGreeting } from "./client-greeting";
+import { HydrateClient } from "@/trpc/server";
 
 export default function Home() {
-  void trpc.hello.prefetch({ text: "Amandeep" });
-
   return (
     <HydrateClient>
       <ErrorBoundary fallback={<div>Something went wrong.</div>}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <ClientGreeting />
-        </Suspense>
+        <Suspense fallback={<div>Loading...</div>}>JobSearch App</Suspense>
       </ErrorBoundary>
     </HydrateClient>
   );
