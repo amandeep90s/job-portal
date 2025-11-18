@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { TRPCProvider } from "@/trpc/client";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -22,7 +23,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
+          <TRPCProvider>{children}</TRPCProvider>
         </ThemeProvider>
       </body>
     </html>
