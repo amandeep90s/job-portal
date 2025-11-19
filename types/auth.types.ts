@@ -25,12 +25,6 @@ export interface PasswordResetRequest {
 
 export interface SignUpPayload extends AuthCredentials {
   name: string;
+  confirmPassword: string;
   role: "employer" | "job_seeker";
-}
-
-export enum UserStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  SUSPENDED = "suspended",
-  DEACTIVATED = "deactivated",
 }

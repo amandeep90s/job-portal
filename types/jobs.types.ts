@@ -1,12 +1,14 @@
+import { EmploymentType, ExperienceLevel, JobStatus } from "./common.types";
+
 export interface JobDetail {
   id: string;
   title: string;
   description: string;
-  employmentType: string;
+  employmentType: EmploymentType;
   minSalary?: number;
   maxSalary?: number;
   location?: string;
-  status: string;
+  status: JobStatus;
   views: number;
   companyName: string;
   createdAt: Date;
@@ -14,24 +16,24 @@ export interface JobDetail {
 
 export interface JobFilters {
   searchQuery?: string;
-  employmentType?: string;
+  employmentType?: EmploymentType;
   location?: string;
   salaryMin?: number;
   salaryMax?: number;
-  experienceLevel?: string;
-  status?: string;
+  experienceLevel?: ExperienceLevel;
+  status?: JobStatus;
 }
 
 // Jobs feature types
 export interface JobPostPayload {
   title: string;
   description: string;
-  employmentType: string;
+  employmentType: EmploymentType;
   minSalary?: number;
   maxSalary?: number;
   location?: string;
   locationType?: string;
-  experienceLevel?: string;
+  experienceLevel?: ExperienceLevel;
   deadline?: Date;
   skills: string[];
 }
@@ -39,9 +41,9 @@ export interface JobPostPayload {
 export interface UpdateJobPayload {
   title?: string;
   description?: string;
-  employmentType?: string;
+  employmentType?: EmploymentType;
   minSalary?: number;
   maxSalary?: number;
   location?: string;
-  status?: string;
+  status?: JobStatus;
 }

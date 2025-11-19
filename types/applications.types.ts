@@ -1,14 +1,16 @@
+import { ApplicationStatus } from "./common.types";
+
 export interface ApplicationDetail {
   id: string;
   jobTitle: string;
   candidateName: string;
-  status: string;
+  status: ApplicationStatus;
   appliedAt: Date;
   rating?: number;
 }
 
 export interface ApplicationFilters {
-  status?: string;
+  status?: ApplicationStatus;
   jobId?: string;
   sortBy?: string;
 }
@@ -21,7 +23,7 @@ export interface ApplicationPayload {
 }
 
 export interface UpdateApplicationStatusPayload {
-  status: string;
+  status: ApplicationStatus;
   rejectionReason?: string;
   rating?: number;
 }

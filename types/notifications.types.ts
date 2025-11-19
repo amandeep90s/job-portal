@@ -1,8 +1,10 @@
+import { NotificationType } from "./common.types";
+
 export interface NotificationDetail {
   id: string;
   title: string;
   message: string;
-  type?: string;
+  type?: NotificationType;
   read: boolean;
   createdAt: Date;
 }
@@ -11,7 +13,7 @@ export interface NotificationDetail {
 export interface NotificationPayload {
   title: string;
   message: string;
-  type?: string;
+  type?: NotificationType;
   userId: string;
 }
 

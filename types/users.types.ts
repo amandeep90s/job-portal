@@ -1,3 +1,5 @@
+import { UserRole, UserStatus } from "./common.types";
+
 export interface EmployerProfilePayload {
   position: string;
   companyId: string;
@@ -28,8 +30,9 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   verified: boolean;
-  status: string;
+  verifiedAt?: Date;
+  status: UserStatus;
   createdAt: Date;
 }

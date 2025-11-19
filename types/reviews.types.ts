@@ -1,15 +1,17 @@
+import { ReviewType } from "./common.types";
+
 export interface ReviewDetail {
   id: string;
   rating: number;
   comment?: string;
-  reviewType: string;
+  reviewType: ReviewType;
   reviewerName: string;
   companyName?: string;
   createdAt: Date;
 }
 
 export interface ReviewFilters {
-  reviewType?: string;
+  reviewType?: ReviewType;
   companyId?: string;
   minRating?: number;
 }
@@ -18,7 +20,7 @@ export interface ReviewFilters {
 export interface ReviewPayload {
   rating: number;
   comment?: string;
-  reviewType: string;
+  reviewType: ReviewType;
   companyId?: string;
   reviewedById: string;
 }

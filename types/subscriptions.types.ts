@@ -1,3 +1,5 @@
+import { SubscriptionStatus } from "./common.types";
+
 // Subscriptions feature types
 export interface PlanDetail {
   id: string;
@@ -12,7 +14,7 @@ export interface SubscriptionDetail {
   planName: string;
   startDate: Date;
   endDate: Date;
-  status: string;
+  status: SubscriptionStatus;
   companyName: string;
 }
 
@@ -22,6 +24,6 @@ export interface SubscriptionPayload {
 }
 
 export interface UpdateSubscriptionPayload {
-  status?: string;
+  status?: SubscriptionStatus;
   endDate?: Date;
 }

@@ -1,3 +1,5 @@
+import { CompanySize } from "./common.types";
+
 export interface CompanyDetail {
   id: string;
   name: string;
@@ -6,7 +8,7 @@ export interface CompanyDetail {
   logoUrl?: string;
   verified: boolean;
   industry?: string;
-  companySize?: string;
+  companySize?: CompanySize;
 }
 
 // Companies feature types
@@ -18,7 +20,7 @@ export interface CompanyPayload {
   city?: string;
   country?: string;
   industry?: string;
-  companySize?: string;
+  companySize?: CompanySize;
 }
 
 export interface UpdateCompanyPayload {
@@ -29,5 +31,5 @@ export interface UpdateCompanyPayload {
   city?: string;
   country?: string;
   industry?: string;
-  companySize?: string;
+  companySize?: CompanySize;
 }
