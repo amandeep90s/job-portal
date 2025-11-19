@@ -1,3 +1,5 @@
+import { randomInt } from "crypto";
+
 import bcryptjs from "bcryptjs";
 
 import { authRepository } from "@/lib/repositories/auth.repository";
@@ -24,7 +26,7 @@ export const authService = {
    * Generate a 6-digit OTP code
    */
   generateVerificationOTP: (): string => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return randomInt(100000, 1000000).toString();
   },
 
   /**
