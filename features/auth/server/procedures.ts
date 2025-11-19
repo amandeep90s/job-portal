@@ -36,7 +36,7 @@ export const authRouter = createTRPCRouter({
     } catch (error) {
       if (error instanceof Error) {
         throw new TRPCError({
-          code: error.message.includes("Invalid") || error.message.includes("expired") ? "BAD_REQUEST" : "NOT_FOUND",
+          code: error.message.includes("Invalid or expired OTP") ? "BAD_REQUEST" : "NOT_FOUND",
           message: error.message,
         });
       }
