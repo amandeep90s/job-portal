@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { env } from "@/lib/config";
 import { TRPCProvider } from "@/trpc/client";
 
 import type { Metadata } from "next";
@@ -14,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Job Portal",
-  description: "A modern job portal built with Next.js and TypeScript.",
+  title: env.APP_NAME,
+  description: `A modern ${env.APP_NAME} built with Next.js and TypeScript.`,
 };
 
 export default function RootLayout({

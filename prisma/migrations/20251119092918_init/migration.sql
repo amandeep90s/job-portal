@@ -68,7 +68,7 @@ CREATE TABLE "users" (
 CREATE TABLE "verification_tokens" (
     "id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
+    "otp" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -479,10 +479,7 @@ CREATE INDEX "users_role_status_idx" ON "users"("role", "status");
 CREATE INDEX "users_createdAt_idx" ON "users"("createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens"("token");
-
--- CreateIndex
-CREATE INDEX "verification_tokens_identifier_token_idx" ON "verification_tokens"("identifier", "token");
+CREATE INDEX "verification_tokens_identifier_otp_idx" ON "verification_tokens"("identifier", "otp");
 
 -- CreateIndex
 CREATE INDEX "verification_tokens_expires_idx" ON "verification_tokens"("expires");

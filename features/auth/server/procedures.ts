@@ -25,4 +25,46 @@ export const authRouter = createTRPCRouter({
       });
     }
   }),
+
+  /**
+   * Verify user email endpoint
+   */
+  verifyEmail: baseProcedure.input(authValidators.verifyEmail).mutation(async ({ input }) => {
+    try {
+      const result = await authService.verifyEmail(input);
+      return result;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new TRPCError({
+          code: error.message.includes("Invalid or expired OTP") ? "BAD_REQUEST" : "NOT_FOUND",
+          message: error.message,
+        });
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred during email verification",
+      });
+    }
+  }),
+
+  /**
+   * Resend verification email endpoint
+   */
+  resendVerificationEmail: baseProcedure.input(authValidators.resendVerificationEmail).mutation(async ({ input }) => {
+    try {
+      const result = await authService.resendVerificationEmail(input);
+      return result;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new TRPCError({
+          code: error.message === "User not found" ? "NOT_FOUND" : "BAD_REQUEST",
+          message: error.message,
+        });
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred while resending verification email",
+      });
+    }
+  }),
 });

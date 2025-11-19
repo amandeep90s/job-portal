@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-// Email validation regex
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 // Password strength validation - at least 8 chars, 1 uppercase, 1 lowercase, 1 number
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
@@ -15,11 +12,7 @@ export const authValidators = {
         .min(2, "Name must be at least 2 characters")
         .max(100, "Name must not exceed 100 characters")
         .trim(),
-      email: z
-        .email()
-        .max(50, "Email must not exceed 50 characters")
-        .toLowerCase()
-        .refine((email) => EMAIL_REGEX.test(email), "Invalid email format"),
+      email: z.email().max(50, "Email must not exceed 50 characters").toLowerCase(),
       password: z
         .string()
         .min(8, "Password must be at least 8 characters")
@@ -35,7 +28,23 @@ export const authValidators = {
       message: "Passwords don't match",
       path: ["confirmPassword"],
     }),
+
+  // Email verification validation
+  verifyEmail: z.object({
+    email: z.email().max(50, "Email must not exceed 50 characters").toLowerCase(),
+    otp: z
+      .string()
+      .length(6, "OTP must be exactly 6 digits")
+      .regex(/^\d{6}$/, "OTP must contain only digits"),
+  }),
+
+  // Resend verification email validation
+  resendVerificationEmail: z.object({
+    email: z.email().max(50, "Email must not exceed 50 characters").toLowerCase(),
+  }),
 };
 
 // Derived types from validators
 export type SignUpInput = z.infer<typeof authValidators.signup>;
+export type VerifyEmailInput = z.infer<typeof authValidators.verifyEmail>;
+export type ResendVerificationEmailInput = z.infer<typeof authValidators.resendVerificationEmail>;
