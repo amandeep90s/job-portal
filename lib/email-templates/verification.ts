@@ -1,5 +1,7 @@
 import DOMPurify from "dompurify";
 
+import { env } from "@/lib/config";
+
 /**
  * Generate HTML for verification email
  */
@@ -84,7 +86,7 @@ export function generateVerificationEmailHTML(options: {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Welcome to Job Portal!</h1>
+          <h1>Welcome to ${env.APP_NAME}!</h1>
         </div>
         
         <div class="content">
@@ -108,8 +110,8 @@ export function generateVerificationEmailHTML(options: {
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} JobSearch. All rights reserved.</p>
-          <p>If you have any questions, please contact us at support@jobportal.com</p>
+          <p>&copy; ${new Date().getFullYear()} ${env.APP_NAME}. All rights reserved.</p>
+          <p>If you have any questions, please contact us at ${env.SUPPORT_EMAIL}</p>
         </div>
       </div>
     </body>
@@ -213,8 +215,8 @@ export function generatePasswordResetEmailHTML(options: { username: string; rese
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} JobSearch. All rights reserved.</p>
-          <p>If you have any questions, please contact us at support@jobportal.com</p>
+          <p>&copy; ${new Date().getFullYear()} ${env.APP_NAME}. All rights reserved.</p>
+          <p>If you have any questions, please contact us at ${env.SUPPORT_EMAIL}</p>
         </div>
       </div>
     </body>

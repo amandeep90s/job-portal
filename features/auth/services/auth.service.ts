@@ -78,7 +78,7 @@ export const authService = {
       throw new Error("Invalid or expired OTP");
     }
 
-    // Check is user exists
+    // Check if user exists
     const user = await authRepository.findByEmail(input.email);
     if (!user) {
       throw new Error("User not found");
@@ -101,7 +101,7 @@ export const authService = {
    * Resend verification email
    */
   resendVerificationEmail: async (input: ResendVerificationEmailInput) => {
-    // Check is user exists
+    // Check if user exists
     const user = await authRepository.findByEmail(input.email);
     if (!user) {
       throw new Error("User not found");

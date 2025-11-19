@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+import { env } from "@/lib/config";
 import { generateVerificationEmailHTML } from "@/lib/email-templates/verification";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -15,7 +16,7 @@ export const emailService = {
       const response = await resend.emails.send({
         from: process.env.RESEND_EMAIL_FROM!,
         to: options.email,
-        subject: "Verify your email - JobSearch",
+        subject: `Verify your email - ${env.APP_NAME}`,
         html: generateVerificationEmailHTML({
           username: options.username || "there",
           otp: options.otp,
