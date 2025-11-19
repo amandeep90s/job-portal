@@ -61,12 +61,18 @@ export const authRepository = {
   updateVerificationStatus: async (userId: string, verified: boolean) => {
     return prisma.user.update({
       where: { id: userId },
-      data: { verified },
+      data: {
+        verified,
+        verifiedAt: verified ? new Date() : null,
+        status: verified ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+      },
       select: {
         id: true,
         name: true,
         email: true,
         verified: true,
+        verifiedAt: true,
+        status: true,
       },
     });
   },
@@ -109,6 +115,61 @@ export const authRepository = {
       where: { id: userId },
       data: { lastLogin: new Date() },
       select: { id: true, lastLogin: true },
+    });
+  },
+
+  /**
+   * Create a verification OTP
+   */
+  createVerificationOTP: async (email: string, otp: string, expiresIn: number = 5 * 60 * 1000) => {
+    const expires = new Date(Date.now() + expiresIn);
+
+    return prisma.verificationToken.create({
+      data: {
+        identifier: email.toLowerCase(),
+        otp,
+        expires,
+      },
+      select: {
+        id: true,
+        identifier: true,
+        otp: true,
+        expires: true,
+      },
+    });
+  },
+
+  /**
+   * Find verification token by email and OTP
+   */
+  findVerificationOTP: async (email: string, otp: string) => {
+    return prisma.verificationToken.findFirst({
+      where: { identifier: email.toLowerCase(), otp, expires: { gt: new Date() } },
+      select: {
+        id: true,
+        identifier: true,
+        otp: true,
+        expires: true,
+      },
+    });
+  },
+
+  /**
+   * Delete verification OTP
+   */
+  deleteVerificationOTP: async (tokenId: string) => {
+    return prisma.verificationToken.delete({
+      where: { id: tokenId },
+      select: { id: true },
+    });
+  },
+
+  /**
+   * Delete all verification tokens for an email
+   */
+  deleteVerificationOTPsByEmail: async (email: string) => {
+    return prisma.verificationToken.deleteMany({
+      where: { identifier: email.toLowerCase() },
     });
   },
 };

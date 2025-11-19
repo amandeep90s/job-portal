@@ -35,7 +35,31 @@ export const authValidators = {
       message: "Passwords don't match",
       path: ["confirmPassword"],
     }),
+
+  // Email verification validation
+  verifyEmail: z.object({
+    email: z
+      .email()
+      .max(50, "Email must not exceed 50 characters")
+      .toLowerCase()
+      .refine((email) => EMAIL_REGEX.test(email), "Invalid email format"),
+    otp: z
+      .string()
+      .length(6, "OTP must be exactly 6 digits")
+      .regex(/^\d{6}$/, "OTP must contain only digits"),
+  }),
+
+  // Resend verification email validation
+  resendVerificationEmail: z.object({
+    email: z
+      .email()
+      .max(50, "Email must not exceed 50 characters")
+      .toLowerCase()
+      .refine((email) => EMAIL_REGEX.test(email), "Invalid email format"),
+  }),
 };
 
 // Derived types from validators
 export type SignUpInput = z.infer<typeof authValidators.signup>;
+export type VerifyEmailInput = z.infer<typeof authValidators.verifyEmail>;
+export type ResendVerificationEmailInput = z.infer<typeof authValidators.resendVerificationEmail>;

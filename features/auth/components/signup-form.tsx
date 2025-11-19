@@ -56,7 +56,7 @@ export function SignUpForm() {
           name="name"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="block text-sm">Name</FormLabel>
+              <FormLabel className="mb-0 block text-sm">Name</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -76,7 +76,7 @@ export function SignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="block text-sm">Email</FormLabel>
+              <FormLabel className="mb-0 block text-sm">Email</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -96,7 +96,7 @@ export function SignUpForm() {
           name="password"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="block text-sm">Password</FormLabel>
+              <FormLabel className="mb-0 block text-sm">Password</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -116,7 +116,7 @@ export function SignUpForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="block text-sm">Confirm Password</FormLabel>
+              <FormLabel className="mb-0 block text-sm">Confirm Password</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -136,7 +136,7 @@ export function SignUpForm() {
           name="role"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <p className="block text-sm">I am a</p>
+              <p className="mb-0 block text-sm">I am a</p>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -160,8 +160,12 @@ export function SignUpForm() {
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Sign Up
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isPending || form.formState.isSubmitting || signupMutation.isPending}
+        >
+          {signupMutation.isPending ? "Signing Up..." : "Sign Up"}
         </Button>
       </form>
     </Form>
