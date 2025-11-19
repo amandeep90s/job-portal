@@ -1,3 +1,5 @@
+import DOMPurify from "dompurify";
+
 /**
  * Generate HTML for verification email
  */
@@ -86,18 +88,18 @@ export function generateVerificationEmailHTML(options: {
         </div>
         
         <div class="content">
-          <p>Hi ${options.username},</p>
+          <p>Hi ${DOMPurify.sanitize(options.username)},</p>
           
           <p>Thank you for signing up. Please verify your email address to complete your registration and get started.</p>
           
           <p><strong>Your verification code is:</strong></p>
           
-          <div class="code-box">${options.otp}</div>
+          <div class="code-box">${DOMPurify.sanitize(options.otp)}</div>
           
           <div class="divider">or</div>
           
           <div style="text-align: center;">
-            <a href="${options.verificationUrl}" class="button">Verify Email Address</a>
+            <a href="${DOMPurify.sanitize(options.verificationUrl)}" class="button">Verify Email Address</a>
           </div>
           
           <p style="font-size: 14px; color: #6b7280;">
@@ -189,12 +191,12 @@ export function generatePasswordResetEmailHTML(options: { username: string; rese
         </div>
         
         <div class="content">
-          <p>Hi ${options.username},</p>
+          <p>Hi ${DOMPurify.sanitize(options.username)},</p>
           
           <p>We received a request to reset your password. Click the button below to create a new password:</p>
           
           <div style="text-align: center;">
-            <a href="${options.resetUrl}" class="button">Reset Password</a>
+            <a href="${DOMPurify.sanitize(options.resetUrl)}" class="button">Reset Password</a>
           </div>
           
           <div class="warning">
@@ -205,7 +207,7 @@ export function generatePasswordResetEmailHTML(options: { username: string; rese
             If the button above doesn't work, copy and paste this link into your browser:
             <br>
             <code style="background: white; padding: 5px; border-radius: 3px; font-size: 12px; word-break: break-all;">
-              ${options.resetUrl}
+              ${DOMPurify.sanitize(options.resetUrl)}
             </code>
           </p>
         </div>
