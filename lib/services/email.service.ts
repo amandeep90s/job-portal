@@ -32,8 +32,8 @@ export const emailService = {
         success: true,
         messageId: response.data?.id,
       };
-    } catch {
-      throw new Error("Failed to send verification email");
+    } catch (error: unknown) {
+      throw new Error(`Failed to send verification email: ${error instanceof Error ? error.message : String(error)}`);
     }
   },
 };
