@@ -1,6 +1,5 @@
-import DOMPurify from "dompurify";
-
 import { env } from "@/lib/config";
+import { escapeHtml } from "@/lib/utils/html";
 
 /**
  * Generate HTML for verification email
@@ -86,22 +85,22 @@ export function generateVerificationEmailHTML(options: {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Welcome to ${env.APP_NAME}!</h1>
+          <h1>Welcome to ${escapeHtml(env.APP_NAME)}!</h1>
         </div>
         
         <div class="content">
-          <p>Hi ${DOMPurify.sanitize(options.username)},</p>
+          <p>Hi ${escapeHtml(options.username)},</p>
           
           <p>Thank you for signing up. Please verify your email address to complete your registration and get started.</p>
           
           <p><strong>Your verification code is:</strong></p>
           
-          <div class="code-box">${DOMPurify.sanitize(options.otp)}</div>
+          <div class="code-box">${escapeHtml(options.otp)}</div>
           
           <div class="divider">or</div>
           
           <div style="text-align: center;">
-            <a href="${DOMPurify.sanitize(options.verificationUrl)}" class="button">Verify Email Address</a>
+            <a href="${escapeHtml(options.verificationUrl)}" class="button">Verify Email Address</a>
           </div>
           
           <p style="font-size: 14px; color: #6b7280;">
@@ -110,8 +109,8 @@ export function generateVerificationEmailHTML(options: {
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} ${env.APP_NAME}. All rights reserved.</p>
-          <p>If you have any questions, please contact us at ${env.SUPPORT_EMAIL}</p>
+          <p>&copy; ${new Date().getFullYear()} ${escapeHtml(env.APP_NAME)}. All rights reserved.</p>
+          <p>If you have any questions, please contact us at ${escapeHtml(env.SUPPORT_EMAIL)}</p>
         </div>
       </div>
     </body>
@@ -193,12 +192,12 @@ export function generatePasswordResetEmailHTML(options: { username: string; rese
         </div>
         
         <div class="content">
-          <p>Hi ${DOMPurify.sanitize(options.username)},</p>
+          <p>Hi ${escapeHtml(options.username)},</p>
           
           <p>We received a request to reset your password. Click the button below to create a new password:</p>
           
           <div style="text-align: center;">
-            <a href="${DOMPurify.sanitize(options.resetUrl)}" class="button">Reset Password</a>
+            <a href="${escapeHtml(options.resetUrl)}" class="button">Reset Password</a>
           </div>
           
           <div class="warning">
@@ -209,14 +208,14 @@ export function generatePasswordResetEmailHTML(options: { username: string; rese
             If the button above doesn't work, copy and paste this link into your browser:
             <br>
             <code style="background: white; padding: 5px; border-radius: 3px; font-size: 12px; word-break: break-all;">
-              ${DOMPurify.sanitize(options.resetUrl)}
+              ${escapeHtml(options.resetUrl)}
             </code>
           </p>
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} ${env.APP_NAME}. All rights reserved.</p>
-          <p>If you have any questions, please contact us at ${env.SUPPORT_EMAIL}</p>
+          <p>&copy; ${new Date().getFullYear()} ${escapeHtml(env.APP_NAME)}. All rights reserved.</p>
+          <p>If you have any questions, please contact us at ${escapeHtml(env.SUPPORT_EMAIL)}</p>
         </div>
       </div>
     </body>
