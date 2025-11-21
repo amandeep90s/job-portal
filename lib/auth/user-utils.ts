@@ -3,7 +3,7 @@
  *
  * These functions extract user information from various sources:
  * - Server-side: From middleware headers or session tokens
- * - Client-side: From localStorage or cookies
+ * - Client-side: From cookies (secure HttpOnly cookies)
  */
 
 import { headers } from "next/headers";
@@ -45,39 +45,6 @@ export async function getUserFromHeaders(): Promise<UserData | null> {
     };
   } catch (error) {
     console.error("[getUserFromHeaders] Error:", error);
-    return null;
-  }
-}
-
-/**
- * Get user from localStorage (client-side)
- * Returns user data stored during sign-in
- *
- * Usage in Client Components:
- * ```typescript
- * const user = getUserFromStorage();
- * ```
- */
-export function getUserFromStorage(): UserData | null {
-  try {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    const userJson = localStorage.getItem("user");
-    if (!userJson) {
-      return null;
-    }
-
-    const user = JSON.parse(userJson);
-    return {
-      userId: user.id,
-      email: user.email,
-      verified: user.verified,
-      role: user.role,
-    };
-  } catch (error) {
-    console.error("[getUserFromStorage] Error:", error);
     return null;
   }
 }
