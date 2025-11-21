@@ -4,14 +4,78 @@
  */
 
 /**
- * List of trusted proxy IPs or IP ranges
+ * List of trusted proxy IPs or IP ranges (CIDR format supported)
  * In production, configure this based on your infrastructure
  * Examples:
  * - Vercel: 76.76.19.0/24
- * - Cloudflare: See https://www.cloudflare.com/ips/
- * - AWS CloudFront: See AWS IP ranges
+ * - Cloudflare: 173.245.48.0/20,173.245.49.0/20,173.245.50.0/21,etc.
+ * - AWS CloudFront: 52.86.0.0/15,52.88.0.0/13,etc.
+ * - Single IP: 192.168.1.1
  */
-const TRUSTED_PROXIES = process.env.TRUSTED_PROXY_IPS?.split(",") || [];
+const TRUSTED_PROXIES = process.env.TRUSTED_PROXY_IPS?.split(",").map((ip) => ip.trim()) || [];
+
+/**
+ * Convert IPv4 address to 32-bit integer for comparison
+ * @param ip - IPv4 address string (e.g., "192.168.1.1")
+ * @returns 32-bit integer or null if invalid
+ */
+function ipToInt(ip: string): number | null {
+  const parts = ip.split(".");
+  if (parts.length !== 4) return null;
+
+  let result = 0;
+  for (const part of parts) {
+    const num = parseInt(part, 10);
+    if (isNaN(num) || num < 0 || num > 255) return null;
+    result = (result << 8) + num;
+  }
+  return result >>> 0; // Convert to unsigned 32-bit
+}
+
+/**
+ * Parse CIDR notation and return network and mask
+ * @param cidr - CIDR notation (e.g., "192.168.1.0/24")
+ * @returns Object with network and mask as 32-bit integers, or null if invalid
+ */
+function parseCIDR(cidr: string): { network: number; mask: number } | null {
+  const [ip, prefixStr] = cidr.split("/");
+  const ipInt = ipToInt(ip);
+
+  if (ipInt === null) return null;
+
+  // If no prefix, treat as single IP (/32)
+  if (!prefixStr) {
+    return { network: ipInt, mask: 0xffffffff };
+  }
+
+  const prefix = parseInt(prefixStr, 10);
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) return null;
+
+  // Create mask (e.g., /24 → 0xFFFFFF00)
+  const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
+  const network = ipInt & mask;
+
+  return { network, mask };
+}
+
+/**
+ * Check if an IP address is within a CIDR range or matches exactly
+ * @param ip - IP address to check
+ * @param proxy - Trusted proxy in CIDR or exact format
+ * @returns true if IP matches the proxy range
+ */
+function isIPInRange(ip: string, proxy: string): boolean {
+  // Try CIDR format first
+  const cidr = parseCIDR(proxy);
+  if (cidr) {
+    const ipInt = ipToInt(ip);
+    if (ipInt === null) return false;
+    return (ipInt & cidr.mask) === (cidr.network & cidr.mask);
+  }
+
+  // If not valid CIDR, try exact match only
+  return ip === proxy;
+}
 
 /**
  * Check if an IP is from a trusted proxy
@@ -19,16 +83,18 @@ const TRUSTED_PROXIES = process.env.TRUSTED_PROXY_IPS?.split(",") || [];
  * @returns true if the IP is trusted or if no proxies are configured
  */
 function isTrustedProxy(ip: string): boolean {
-  // If no trusted proxies are configured, only trust direct connections
+  // If no trusted proxies are configured, trust the header (development mode)
   if (TRUSTED_PROXIES.length === 0) {
-    return true; // In development or when not configured, trust the header
+    return true;
+  }
+
+  // Validate IP format (basic check)
+  if (!ip || typeof ip !== "string") {
+    return false;
   }
 
   // Check if IP matches any trusted proxy
-  return TRUSTED_PROXIES.some((proxy) => {
-    // Simple check - for production, use a proper IP range library
-    return ip.includes(proxy) || ip === proxy;
-  });
+  return TRUSTED_PROXIES.some((proxy) => isIPInRange(ip, proxy));
 }
 
 /**
