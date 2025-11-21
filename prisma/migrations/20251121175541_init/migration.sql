@@ -58,6 +58,8 @@ CREATE TABLE "users" (
     "lastLogin" TIMESTAMP(3),
     "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "timezone" TEXT DEFAULT 'UTC',
+    "failedLoginAttempts" INTEGER NOT NULL DEFAULT 0,
+    "lockedUntil" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -70,6 +72,8 @@ CREATE TABLE "verification_tokens" (
     "identifier" TEXT NOT NULL,
     "otp" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "lockedUntil" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "verification_tokens_pkey" PRIMARY KEY ("id")
