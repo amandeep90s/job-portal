@@ -8,7 +8,8 @@ const handler = (req: Request) =>
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: createTRPCContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createContext: () => createTRPCContext({ req } as any),
   });
 
 export { handler as GET, handler as POST };

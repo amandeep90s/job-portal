@@ -1,14 +1,15 @@
 import { TRPCError } from "@trpc/server";
 
 import { authService } from "@/features/auth/services/auth.service";
-import { baseProcedure, createTRPCRouter } from "@/trpc/init";
+import { createTRPCRouter } from "@/trpc/init";
+import { authRateLimited } from "@/trpc/middleware/rate-limit";
 import { authValidators } from "@/validators";
 
 export const authRouter = createTRPCRouter({
   /**
    * Signup new user endpoint
    */
-  signup: baseProcedure.input(authValidators.signup).mutation(async ({ input }) => {
+  signup: authRateLimited.input(authValidators.signup).mutation(async ({ input }) => {
     try {
       const result = await authService.signup(input);
       return result;
@@ -29,7 +30,7 @@ export const authRouter = createTRPCRouter({
   /**
    * Verify user email endpoint
    */
-  verifyEmail: baseProcedure.input(authValidators.verifyEmail).mutation(async ({ input }) => {
+  verifyEmail: authRateLimited.input(authValidators.verifyEmail).mutation(async ({ input }) => {
     try {
       const result = await authService.verifyEmail(input);
       return result;
@@ -50,7 +51,7 @@ export const authRouter = createTRPCRouter({
   /**
    * Resend verification email endpoint
    */
-  resendVerificationEmail: baseProcedure.input(authValidators.resendVerificationEmail).mutation(async ({ input }) => {
+  resendVerificationEmail: authRateLimited.input(authValidators.resendVerificationEmail).mutation(async ({ input }) => {
     try {
       const result = await authService.resendVerificationEmail(input);
       return result;
