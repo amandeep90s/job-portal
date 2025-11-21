@@ -6,6 +6,7 @@ import superjson from "superjson";
 import { prisma } from "@/lib/prisma";
 import { authRatelimit } from "@/lib/services/auth-ratelimit";
 import { ratelimit } from "@/lib/services/ratelimit";
+import { generateRateLimitIdentifier } from "@/lib/utils/ip-extractor";
 
 export const createTRPCContext = cache(async () => {
   const userId = "user_123";
@@ -18,6 +19,7 @@ export const createTRPCContext = cache(async () => {
 export type Context = Awaited<ReturnType<typeof createTRPCContext>> & {
   req?: Request;
   headers?: Headers;
+  clientIP?: string;
 };
 
 // Avoid exporting the entire t-object
@@ -63,29 +65,21 @@ export const protectedProcedure = t.procedure.use(async function isAuthed(opts) 
 
 // Auth rate limited procedure (for auth routes: signup, login, verify email, etc.)
 // Allows 5 requests per 15 minutes per identifier (IP + email combination)
+// Uses secure IP extraction to prevent header spoofing attacks
 export const authRateLimitedProcedure = t.procedure.use(async function authRateLimit(opts) {
   const { input, ctx } = opts;
 
   /**
    * Extract identifiers from request for rate limiting
-   * Priority order:
-   * 1. IP address (primary identifier for unauthenticated requests)
-   * 2. Email from input (for most auth operations)
-   * 3. userId (fallback for authenticated requests)
-   * 4. "anonymous" (last resort)
+   * - IP address: Extracted securely from context (trusted proxy aware)
+   * - Email: From input for most auth operations
+   * - Fallback: "unknown" if IP cannot be determined
+   *
+   * Security: Uses secure IP extraction that validates proxy headers
+   * to prevent header spoofing attacks
    */
 
-  // Get IP address from headers
-  let ipAddress = "unknown";
-  if (ctx.headers) {
-    // Check various headers that might contain IP address
-    ipAddress =
-      (ctx.headers.get("x-forwarded-for")?.split(",")[0].trim() as string) ||
-      (ctx.headers.get("x-real-ip") as string) ||
-      (ctx.headers.get("cf-connecting-ip") as string) ||
-      (ctx.headers.get("x-client-ip") as string) ||
-      "unknown";
-  }
+  const ipAddress = ctx.clientIP || "unknown";
 
   // Get email from input if available
   let email = "";
@@ -93,9 +87,8 @@ export const authRateLimitedProcedure = t.procedure.use(async function authRateL
     email = (input as { email: string }).email.toLowerCase();
   }
 
-  // Build identifier: combination of IP and email (or just IP if no email)
-  const identifier = email ? `${ipAddress}:${email}` : ipAddress;
-  const rateLimitKey = `auth:${identifier}`;
+  // Generate secure rate limit key
+  const rateLimitKey = generateRateLimitIdentifier(ipAddress, email);
 
   const { success, reset } = await authRatelimit.limit(rateLimitKey);
 

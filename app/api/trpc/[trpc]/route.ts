@@ -1,10 +1,15 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
+import { extractClientIP } from "@/lib/utils/ip-extractor";
 import { createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-const handler = (req: Request) =>
-  fetchRequestHandler({
+const handler = (req: Request) => {
+  // Extract client IP from request
+  // In Vercel/Next.js, the x-forwarded-for header contains the client IP
+  const clientIP = extractClientIP(req.headers, req.headers.get("x-forwarded-for") || undefined);
+
+  return fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
@@ -15,8 +20,10 @@ const handler = (req: Request) =>
         ...ctx,
         req,
         headers: req.headers,
+        clientIP,
       };
     },
   });
+};
 
 export { handler as GET, handler as POST };
