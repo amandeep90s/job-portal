@@ -3,7 +3,7 @@ import { randomInt } from "crypto";
 import bcryptjs from "bcryptjs";
 
 import { authRepository } from "@/lib/repositories/auth.repository";
-import { emailService } from "@/lib/services/email.service";
+import { emailService } from "@/lib/services/email";
 import { ResendVerificationEmailInput, SignUpInput, VerifyEmailInput } from "@/validators";
 
 export const authService = {

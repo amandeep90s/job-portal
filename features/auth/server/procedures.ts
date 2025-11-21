@@ -1,14 +1,15 @@
 import { TRPCError } from "@trpc/server";
 
 import { authService } from "@/features/auth/services/auth.service";
-import { baseProcedure, createTRPCRouter } from "@/trpc/init";
+import { authRateLimitedProcedure, createTRPCRouter } from "@/trpc/init";
 import { authValidators } from "@/validators";
 
 export const authRouter = createTRPCRouter({
   /**
    * Signup new user endpoint
+   * Rate limited: 5 attempts per 15 minutes
    */
-  signup: baseProcedure.input(authValidators.signup).mutation(async ({ input }) => {
+  signup: authRateLimitedProcedure.input(authValidators.signup).mutation(async ({ input }) => {
     try {
       const result = await authService.signup(input);
       return result;
@@ -28,8 +29,9 @@ export const authRouter = createTRPCRouter({
 
   /**
    * Verify user email endpoint
+   * Rate limited: 5 attempts per 15 minutes
    */
-  verifyEmail: baseProcedure.input(authValidators.verifyEmail).mutation(async ({ input }) => {
+  verifyEmail: authRateLimitedProcedure.input(authValidators.verifyEmail).mutation(async ({ input }) => {
     try {
       const result = await authService.verifyEmail(input);
       return result;
@@ -49,22 +51,25 @@ export const authRouter = createTRPCRouter({
 
   /**
    * Resend verification email endpoint
+   * Rate limited: 5 attempts per 15 minutes
    */
-  resendVerificationEmail: baseProcedure.input(authValidators.resendVerificationEmail).mutation(async ({ input }) => {
-    try {
-      const result = await authService.resendVerificationEmail(input);
-      return result;
-    } catch (error) {
-      if (error instanceof Error) {
+  resendVerificationEmail: authRateLimitedProcedure
+    .input(authValidators.resendVerificationEmail)
+    .mutation(async ({ input }) => {
+      try {
+        const result = await authService.resendVerificationEmail(input);
+        return result;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new TRPCError({
+            code: error.message === "User not found" ? "NOT_FOUND" : "BAD_REQUEST",
+            message: error.message,
+          });
+        }
         throw new TRPCError({
-          code: error.message === "User not found" ? "NOT_FOUND" : "BAD_REQUEST",
-          message: error.message,
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred while resending verification email",
         });
       }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An unexpected error occurred while resending verification email",
-      });
-    }
-  }),
+    }),
 });
