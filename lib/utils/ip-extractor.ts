@@ -42,31 +42,36 @@ function isTrustedProxy(ip: string): boolean {
 export function extractClientIP(headers: Headers, remoteAddr?: string): string {
   /**
    * Priority order for IP extraction:
-   * 1. Remote address (most secure - actual connection IP)
-   * 2. Proxy headers (only if from trusted proxy)
+   * 1. Proxy headers (if remoteAddr is from a trusted proxy)
+   * 2. Direct connection IP (if not from proxy)
    * 3. Fallback to "unknown"
+   *
+   * Security: Only trust proxy headers if they come from a trusted proxy server
    */
 
-  // Use actual connection IP if available (most secure)
+  // If remoteAddr is available and from a trusted proxy, check proxy headers
+  if (remoteAddr && remoteAddr !== "unknown" && isTrustedProxy(remoteAddr)) {
+    // Check proxy headers in order of preference
+    const xForwardedFor = headers.get("x-forwarded-for");
+    if (xForwardedFor) {
+      // x-forwarded-for can contain multiple IPs, use the first one (client IP)
+      return xForwardedFor.split(",")[0].trim();
+    }
+
+    const xRealIp = headers.get("x-real-ip");
+    if (xRealIp) {
+      return xRealIp;
+    }
+
+    const cfConnectingIp = headers.get("cf-connecting-ip");
+    if (cfConnectingIp) {
+      return cfConnectingIp;
+    }
+  }
+
+  // If we have a direct connection IP (not from proxy), use it
   if (remoteAddr && remoteAddr !== "unknown") {
     return remoteAddr;
-  }
-
-  // Only check proxy headers if we have a remote address suggesting a proxy
-  const xForwardedFor = headers.get("x-forwarded-for");
-  if (xForwardedFor && isTrustedProxy(remoteAddr || "")) {
-    // x-forwarded-for can contain multiple IPs, use the first one (client IP)
-    return xForwardedFor.split(",")[0].trim();
-  }
-
-  const xRealIp = headers.get("x-real-ip");
-  if (xRealIp && isTrustedProxy(remoteAddr || "")) {
-    return xRealIp;
-  }
-
-  const cfConnectingIp = headers.get("cf-connecting-ip");
-  if (cfConnectingIp && isTrustedProxy(remoteAddr || "")) {
-    return cfConnectingIp;
   }
 
   // Fallback: use remoteAddr or unknown

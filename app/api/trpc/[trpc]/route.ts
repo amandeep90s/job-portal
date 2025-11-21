@@ -6,8 +6,11 @@ import { appRouter } from "@/trpc/routers/_app";
 
 const handler = (req: Request) => {
   // Extract client IP from request
-  // In Vercel/Next.js, the x-forwarded-for header contains the client IP
-  const clientIP = extractClientIP(req.headers, req.headers.get("x-forwarded-for") || undefined);
+  // Note: remoteAddr should be the actual connection IP from the socket
+  // For Vercel, this comes from x-forwarded-for header which represents the proxy
+  // For local development, this would be the actual socket connection IP
+  const remoteAddr = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || undefined;
+  const clientIP = extractClientIP(req.headers, remoteAddr);
 
   return fetchRequestHandler({
     endpoint: "/api/trpc",
