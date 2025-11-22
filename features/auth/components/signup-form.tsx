@@ -22,7 +22,7 @@ export function SignUpForm() {
   const signupMutation = trpc.auth.signup.useMutation();
 
   const form = useForm<SignUpInput>({
-    resolver: zodResolver(authValidators.signup),
+    resolver: zodResolver(authValidators.signUp),
     mode: "onChange",
     defaultValues: {
       name: "",
