@@ -2,49 +2,23 @@ import Link from "next/link";
 
 import { LogoIcon } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import SignInForm from "@/features/auth/components/signin-form";
+import { env } from "@/lib/config";
 
 export function SigninView() {
   return (
     <section className="flex min-h-screen bg-zinc-50 px-4 py-16 md:py-32 dark:bg-transparent">
-      <form
-        action=""
-        className="bg-muted m-auto h-fit w-full max-w-sm overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]"
-      >
+      <div className="bg-muted m-auto h-fit w-full max-w-sm overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]">
         <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
           <div className="text-center">
             <Link href="/" aria-label="go home" className="mx-auto block w-fit">
               <LogoIcon />
             </Link>
-            <h1 className="mt-4 mb-1 text-xl font-semibold">Sign In to Tailark</h1>
-            <p className="text-sm">Welcome back! Sign in to continue</p>
+            <h1 className="mt-4 mb-1 text-xl font-semibold">Welcome to {env.APP_NAME}</h1>
+            <p className="text-sm">Sign in to continue exploring opportunities</p>
           </div>
 
-          <div className="mt-6 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="block text-sm">
-                Username
-              </Label>
-              <Input type="email" required name="email" id="email" />
-            </div>
-
-            <div className="space-y-0.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="pwd" className="text-sm">
-                  Password
-                </Label>
-                <Button asChild variant="link" size="sm">
-                  <Link href="/forgot-password" className="link intent-info variant-ghost text-sm">
-                    Forgot your Password?
-                  </Link>
-                </Button>
-              </div>
-              <Input type="password" required name="pwd" id="pwd" className="input sz-md variant-mixed" />
-            </div>
-
-            <Button className="w-full">Sign In</Button>
-          </div>
+          <SignInForm />
 
           <div className="my-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <hr className="border-dashed" />
@@ -94,7 +68,7 @@ export function SigninView() {
             </Button>
           </p>
         </div>
-      </form>
+      </div>
     </section>
   );
 }
