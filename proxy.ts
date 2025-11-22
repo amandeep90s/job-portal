@@ -42,6 +42,7 @@ const AUTH_ONLY_ROUTES = ["/sign-up", "/sign-in", "/forgot-password", "/reset-pa
 const PUBLIC_ROUTES = ["/", "/sign-up", "/sign-in", "/forgot-password", "/verify-email", "/reset-password"];
 
 interface SessionData {
+  name: string;
   userId: string;
   email: string;
   verified: boolean;
