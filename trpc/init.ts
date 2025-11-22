@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { authRatelimit, createAuthRateLimitKey, signInRatelimit } from "@/lib/services/auth-ratelimit";
 import { ratelimit } from "@/lib/services/ratelimit";
 import { generateRateLimitIdentifier } from "@/lib/utils/ip-extractor";
+import { UserStatus } from "@/types";
 
 export const createTRPCContext = cache(async () => {
   const userId = "user_123";
@@ -168,7 +169,7 @@ export const verifiedProtectedProcedure = t.procedure.use(async function verifie
   }
 
   // Check user status
-  if (user.status !== "active") {
+  if (user.status !== UserStatus.ACTIVE) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: `Your account is currently ${user.status}. Please contact support.`,

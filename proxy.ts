@@ -42,9 +42,9 @@ const AUTH_ONLY_ROUTES = ["/sign-up", "/sign-in", "/forgot-password", "/reset-pa
 const PUBLIC_ROUTES = ["/", "/sign-up", "/sign-in", "/forgot-password", "/verify-email", "/reset-password"];
 
 interface SessionData {
-  name: string;
   userId: string;
   email: string;
+  name: string;
   verified: boolean;
   role: "admin" | "employer" | "job_seeker";
   iat?: number;
