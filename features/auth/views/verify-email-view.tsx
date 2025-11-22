@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import Link from "next/link";
 
 import { LogoIcon } from "@/components/common";
@@ -16,7 +18,9 @@ export function VerifyEmailView() {
             <h1 className="mt-4 mb-1 text-xl font-semibold">Verify Your Email</h1>
             <p className="text-sm">Enter the 6-digit code we sent to your email</p>
           </div>
-          <VerifyEmailForm />
+          <Suspense fallback={<div className="mt-6">Loading...</div>}>
+            <VerifyEmailForm />
+          </Suspense>
         </div>
 
         <div className="p-3">

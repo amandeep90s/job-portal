@@ -1,1 +1,0 @@
-// Skills API Routes
