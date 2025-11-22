@@ -45,7 +45,7 @@ interface SessionData {
   userId: string;
   email: string;
   verified: boolean;
-  role: string;
+  role: "admin" | "employer" | "job_seeker";
   iat?: number;
   exp?: number;
   type?: string;
