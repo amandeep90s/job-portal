@@ -9,7 +9,7 @@ export const authRouter = createTRPCRouter({
    * Signup new user endpoint
    * Rate limited: 5 attempts per 15 minutes
    */
-  signup: authRateLimitedProcedure.input(authValidators.signup).mutation(async ({ input }) => {
+  signup: authRateLimitedProcedure.input(authValidators.signUp).mutation(async ({ input }) => {
     try {
       const result = await authService.signup(input);
       return result;

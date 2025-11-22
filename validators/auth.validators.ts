@@ -5,7 +5,7 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export const authValidators = {
   // User signup validation
-  signup: z
+  signUp: z
     .object({
       name: z
         .string()
@@ -42,9 +42,16 @@ export const authValidators = {
   resendVerificationEmail: z.object({
     email: z.email().max(50, "Email must not exceed 50 characters").toLowerCase(),
   }),
+
+  // User sign-in validation
+  signIn: z.object({
+    email: z.email("Please enter a valid email address").max(50, "Email must not exceed 50 characters"),
+    password: z.string().min(1, "Password is required").max(128, "Password must not exceed 128 characters"),
+  }),
 };
 
 // Derived types from validators
-export type SignUpInput = z.infer<typeof authValidators.signup>;
+export type SignUpInput = z.infer<typeof authValidators.signUp>;
 export type VerifyEmailInput = z.infer<typeof authValidators.verifyEmail>;
 export type ResendVerificationEmailInput = z.infer<typeof authValidators.resendVerificationEmail>;
+export type SignInInput = z.infer<typeof authValidators.signIn>;
