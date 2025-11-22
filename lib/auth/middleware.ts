@@ -12,27 +12,38 @@ import { getCurrentSession, refreshAccessToken, verifyToken } from "@/lib/auth/s
 
 /**
  * Extract and validate token from request
- * Supports both cookies and Authorization header (Bearer token)
+ * Supports both Authorization header (Bearer token) and cookies
+ *
+ * @param req - NextRequest object containing headers and cookies
+ * @returns Token string if found, null otherwise
+ *
+ * Note: This function is designed for API route handlers and edge middleware
+ * where NextRequest is available. For TRPC procedures, use getCurrentSession()
+ * which automatically handles cookie extraction from the async context.
  */
-export async function extractAndValidateToken(req?: NextRequest): Promise<string | null> {
-  if (!req) {
-    return null;
-  }
-
-  // Try Authorization header first (for API calls from client)
+export async function extractAndValidateToken(req: NextRequest): Promise<string | null> {
+  // Try Authorization header first (for API calls from client or external services)
   const authHeader = req.headers.get("authorization");
   if (authHeader?.startsWith("Bearer ")) {
     return authHeader.slice(7);
   }
 
-  // Fall back to cookies
+  // Fall back to cookies (for browser-based requests)
   const accessToken = req.cookies.get("accessToken")?.value;
   return accessToken || null;
 }
 
 /**
  * Verify authentication and get user session
- * Used in TRPC procedures to enforce authentication
+ * Attempts to verify provided token, or refresh if expired
+ *
+ * @param token - Optional JWT token to verify. If not provided or invalid,
+ *                attempts to use refresh token to obtain new session
+ * @returns Session data containing user information
+ * @throws TRPCError with UNAUTHORIZED code if session cannot be verified or refreshed
+ *
+ * Usage in TRPC procedures:
+ * const sessionData = await verifyAuthentication(token);
  */
 export async function verifyAuthentication(token?: string) {
   let sessionData = null;
@@ -41,7 +52,7 @@ export async function verifyAuthentication(token?: string) {
     sessionData = await verifyToken(token);
   }
 
-  // If no valid session, try to refresh
+  // If no valid session, try to refresh using refresh token from cookies
   if (!sessionData) {
     const newAccessToken = await refreshAccessToken();
     if (newAccessToken) {

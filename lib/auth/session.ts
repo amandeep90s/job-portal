@@ -91,10 +91,13 @@ export async function verifyToken(token: string): Promise<SessionData | null> {
 /**
  * Store session in Redis for server-side validation
  * Provides ability to invalidate sessions server-side
+ * Also stores hash of refresh token for revocation tracking
  */
 export async function storeSession(sessionData: SessionData, refreshToken: string): Promise<void> {
   const sessionKey = `session:${sessionData.userId}`;
   const expirySeconds = 7 * 24 * 60 * 60; // 7 days
+  // Create a simple hash of the refresh token for revocation tracking
+  const tokenHash = await hashToken(refreshToken);
 
   // Store session data in Redis with expiry
   await redis.setex(
@@ -103,6 +106,7 @@ export async function storeSession(sessionData: SessionData, refreshToken: strin
     JSON.stringify({
       ...sessionData,
       refreshToken,
+      tokenHash, // Store hash for revocation validation
       createdAt: new Date().toISOString(),
     })
   );
@@ -120,6 +124,40 @@ export async function getSession(userId: string): Promise<SessionData | null> {
   }
 
   return JSON.parse(sessionData as string) as SessionData;
+}
+
+/**
+ * Hash a refresh token for secure storage and comparison
+ * Uses SHA-256 to avoid storing tokens in plaintext
+ */
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Revoke a refresh token by adding it to a blacklist
+ * Old tokens are invalidated immediately after rotation
+ */
+async function revokeRefreshToken(userId: string, tokenHash: string): Promise<void> {
+  const revokedKey = `revoked:${userId}:${tokenHash}`;
+  const expirySeconds = 7 * 24 * 60 * 60; // 7 days (match refresh token expiry)
+
+  // Add to revocation list with expiry matching the token's original lifespan
+  await redis.setex(revokedKey, expirySeconds, "true");
+}
+
+/**
+ * Check if a refresh token has been revoked
+ * Returns true if token is in revocation list
+ */
+async function isTokenRevoked(userId: string, tokenHash: string): Promise<boolean> {
+  const revokedKey = `revoked:${userId}:${tokenHash}`;
+  const exists = await redis.get(revokedKey);
+  return exists !== null;
 }
 
 /**
@@ -198,18 +236,19 @@ export async function requireAuth(): Promise<SessionData> {
 /**
  * Refresh access token using refresh token
  * Call this when access token expires
- * Implements refresh token rotation for enhanced security
+ * Implements refresh token rotation with revocation for enhanced security
+ * Detects and prevents token reuse attacks
  */
 export async function refreshAccessToken(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get("refreshToken")?.value;
+    const oldRefreshToken = cookieStore.get("refreshToken")?.value;
 
-    if (!refreshToken) {
+    if (!oldRefreshToken) {
       return null;
     }
 
-    const sessionData = await verifyToken(refreshToken);
+    const sessionData = await verifyToken(oldRefreshToken);
     if (!sessionData || sessionData.type !== "refresh") {
       return null;
     }
@@ -220,11 +259,32 @@ export async function refreshAccessToken(): Promise<string | null> {
       return null;
     }
 
+    // Check if old refresh token has already been revoked (detects token reuse attacks)
+    const oldTokenHash = (fullSessionData as unknown as { tokenHash?: string }).tokenHash;
+    if (oldTokenHash) {
+      const isRevoked = await isTokenRevoked(sessionData.userId, oldTokenHash);
+      if (isRevoked) {
+        // Token reuse detected - invalidate entire session immediately
+        console.warn(`[SECURITY] Token reuse detected for user ${sessionData.userId}. Session invalidated.`);
+        await invalidateSession(sessionData.userId);
+        return null;
+      }
+    }
+
+    // BEFORE issuing new tokens, revoke the old refresh token
+    // This prevents the compromised token from being used again
+    if (oldTokenHash) {
+      await revokeRefreshToken(sessionData.userId, oldTokenHash);
+    }
+
     // Generate new access token
     const newAccessToken = await generateAccessToken(fullSessionData);
 
     // Generate NEW refresh token (rotation) - enhanced security
     const newRefreshToken = await generateRefreshToken(fullSessionData);
+
+    // Update session with new refresh token hash
+    await storeSession(fullSessionData, newRefreshToken);
 
     // Update both cookies
     const newCookieStore = await cookies();

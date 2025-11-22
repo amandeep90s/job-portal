@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 
 import bcryptjs from "bcryptjs";
 
+import { AccountDisabledError, AccountLockedError, OTPLockedError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { authRepository } from "@/lib/repositories/auth.repository";
 import { emailService } from "@/lib/services/email";
@@ -81,7 +82,7 @@ export const authService = {
     // Check if OTP verification is locked due to too many failed attempts
     const isLocked = await authRepository.isOTPLocked(email);
     if (isLocked) {
-      throw new Error("Too many failed attempts. Please try again later.");
+      throw new OTPLockedError(15, "Too many failed OTP attempts. Please try again in 15 minutes.");
     }
 
     // Find the verification OTP record
@@ -102,7 +103,7 @@ export const authService = {
       if (newAttempts >= 3) {
         await authRepository.lockOTPVerification(email, 15 * 60 * 1000); // 15 minute lockout
         console.warn(`[SECURITY] OTP verification locked for ${email} after ${newAttempts} failed attempts`);
-        throw new Error("Too many failed attempts. Please try again in 15 minutes.");
+        throw new OTPLockedError(15, "Too many failed OTP attempts. Please try again in 15 minutes.");
       }
 
       // Log for debugging (don't expose to user)
@@ -199,7 +200,7 @@ export const authService = {
     // Check if account is locked
     if (user && user.lockedUntil && user.lockedUntil > new Date()) {
       const minutesRemaining = Math.ceil((user.lockedUntil.getTime() - Date.now()) / (60 * 1000));
-      throw new Error(`Account temporarily locked. Please try again in ${minutesRemaining} minutes.`);
+      throw new AccountLockedError(minutesRemaining);
     }
 
     if (!user) {
@@ -221,9 +222,7 @@ export const authService = {
       if (updated && updated.failedLoginAttempts >= 5) {
         await authRepository.lockAccount(user.id, 15 * 60 * 1000); // 15 minute lockout
         console.warn(`[SECURITY] Account locked for ${email} after 5 failed login attempts`);
-        throw new Error(
-          "Account temporarily locked due to too many failed login attempts. Please try again in 15 minutes."
-        );
+        throw new AccountLockedError(15, "Account temporarily locked due to too many failed login attempts.");
       }
 
       throw new Error("Invalid email or password");
@@ -234,7 +233,7 @@ export const authService = {
 
     // Check user status (only if verified)
     if (user.verified && user.status !== UserStatus.ACTIVE) {
-      throw new Error(`Your account is currently ${user.status}. Please contact support.`);
+      throw new AccountDisabledError(user.status);
     }
 
     // Update last login timestamp

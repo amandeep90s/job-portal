@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 
 import { authService } from "@/features/auth/services/auth.service";
+import { AccountDisabledError, AccountLockedError, AppError, OTPLockedError } from "@/lib/errors";
 import {
   authRateLimitedProcedure,
   createTRPCRouter,
@@ -41,6 +42,12 @@ export const authRouter = createTRPCRouter({
       const result = await authService.verifyEmail(input);
       return result;
     } catch (error) {
+      if (error instanceof OTPLockedError) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: error.message,
+        });
+      }
       if (error instanceof Error) {
         throw new TRPCError({
           code: error.message.includes("Invalid or expired OTP") ? "BAD_REQUEST" : "NOT_FOUND",
@@ -89,24 +96,38 @@ export const authRouter = createTRPCRouter({
       const result = await authService.signIn(input);
       return result;
     } catch (error) {
+      // Handle custom error types explicitly instead of string matching
+      if (error instanceof AccountLockedError) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: error.message,
+        });
+      }
+      if (error instanceof AccountDisabledError) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: error.message,
+        });
+      }
+      if (error instanceof OTPLockedError) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: error.message,
+        });
+      }
+      if (error instanceof AppError) {
+        // Handle other app errors
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password",
+        });
+      }
       if (error instanceof Error) {
         // Generic error message for security (prevent email enumeration)
         if (error.message.includes("Invalid email or password")) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Invalid email or password",
-          });
-        }
-        if (error.message.includes("account is currently")) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: error.message,
-          });
-        }
-        if (error.message.includes("locked")) {
-          throw new TRPCError({
-            code: "TOO_MANY_REQUESTS",
-            message: error.message,
           });
         }
       }
