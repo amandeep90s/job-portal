@@ -150,6 +150,10 @@ model User {
   twoFactorEnabled Boolean    @default(false)
   timezone         String?    @default("UTC")
 
+  // Security fields
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   // Relations
   jobSeekerProfile   JobSeekerProfile?
   employerProfile    EmployerProfile?
@@ -182,6 +186,10 @@ model VerificationToken {
   identifier String // email address
   otp        String // 6-digit OTP code
   expires    DateTime
+
+  // Security fields for brute force protection
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
 
   createdAt DateTime @default(now())
 

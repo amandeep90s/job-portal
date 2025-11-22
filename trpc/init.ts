@@ -3,20 +3,30 @@ import { cache } from "react";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
+import { getCurrentSession, type SessionData } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { authRatelimit } from "@/lib/services/auth-ratelimit";
+import { authRatelimit, createAuthRateLimitKey, signInRatelimit } from "@/lib/services/auth-ratelimit";
 import { ratelimit } from "@/lib/services/ratelimit";
 import { generateRateLimitIdentifier } from "@/lib/utils/ip-extractor";
+import { UserStatus } from "@/types";
 
 export const createTRPCContext = cache(async () => {
-  const userId = "user_123";
   /**
+   * Get current session from cookies
+   * Session contains userId, email, role, and verification status
    * @see: https://trpc.io/docs/server/context
    */
-  return { userId };
+  const session = await getCurrentSession();
+
+  return {
+    session,
+    userId: session?.userId || null,
+  };
 });
 
-export type Context = Awaited<ReturnType<typeof createTRPCContext>> & {
+export type Context = {
+  session: SessionData | null;
+  userId: string | null;
   req?: Request;
   headers?: Headers;
   clientIP?: string;
@@ -41,20 +51,34 @@ export const baseProcedure = t.procedure;
 export const createTRPCRouter = t.router;
 
 // Protected procedure (requires authentication)
+// Validates user session and enriches context with user data
 export const protectedProcedure = t.procedure.use(async function isAuthed(opts) {
   const { ctx } = opts;
-  if (!ctx.userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "User is not authenticated" });
+
+  // Check if user has valid session
+  if (!ctx.session || !ctx.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "You must be logged in to access this resource" });
   }
 
+  // Verify user still exists in database with current status
   const user = await prisma.user.findUnique({
     where: { id: ctx.userId },
-    select: { id: true, email: true, name: true, role: true, verified: true },
+    select: { id: true, email: true, name: true, role: true, verified: true, status: true },
   });
+
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "User not found" });
   }
 
+  // Check user status
+  if (user.status !== UserStatus.ACTIVE) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Your account is currently unavailable. Please contact support.",
+    });
+  }
+
+  // Apply rate limiting
   const { success } = await ratelimit.limit(user.id);
   if (!success) {
     throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Rate limit exceeded" });
@@ -64,7 +88,7 @@ export const protectedProcedure = t.procedure.use(async function isAuthed(opts) 
 });
 
 // Auth rate limited procedure (for auth routes: signup, login, verify email, etc.)
-// Allows 5 requests per 15 minutes per identifier (IP + email combination)
+// Allows 10 requests per 1 minute per identifier (IP + email combination)
 // Uses secure IP extraction to prevent header spoofing attacks
 export const authRateLimitedProcedure = t.procedure.use(async function authRateLimit(opts) {
   const { input, ctx } = opts;
@@ -96,6 +120,64 @@ export const authRateLimitedProcedure = t.procedure.use(async function authRateL
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
       message: `Too many auth attempts. Please try again after ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
+    });
+  }
+
+  return opts.next(opts);
+});
+
+/**
+ * Sign-in rate limited procedure
+ * 10 requests per 1 minute per identifier (IP + email combination)
+ * Specifically designed to prevent brute force attacks on login
+ * Uses IP + email combination for better abuse tracking
+ */
+export const signInRateLimitedProcedure = t.procedure.use(async function signInRateLimit(opts) {
+  const { input, ctx } = opts;
+
+  const ipAddress = ctx.clientIP || "unknown";
+
+  // Get email from input
+  let email = "";
+  if (input && typeof input === "object" && "email" in input) {
+    email = (input as { email: string }).email.toLowerCase();
+  }
+
+  // Create operation-specific rate limit key for sign-in
+  const rateLimitKey = createAuthRateLimitKey("signin", ipAddress, email);
+
+  const { success, reset } = await signInRatelimit.limit(rateLimitKey);
+
+  if (!success) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `Too many sign-in attempts. Please try again after ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
+    });
+  }
+
+  return opts.next(opts);
+});
+
+/**
+ * Verified protected procedure
+ * Extends protectedProcedure with additional verification check
+ * Only allows authenticated and verified users
+ * Redirects unverified users to email verification page
+ *
+ * Use this for routes that require full account verification
+ * Examples: posting jobs, applying to jobs, viewing analytics
+ */
+export const verifiedProtectedProcedure = protectedProcedure.use(async function verifiedAuth(opts) {
+  const { ctx } = opts;
+
+  // At this point, user is already authenticated, exists, and is active
+  // (protectedProcedure guarantees this - see lines 55-88)
+  // Only check verification status
+  if (!ctx.user.verified) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Email verification required. Please verify your email to access this feature.",
+      cause: "UNVERIFIED_EMAIL",
     });
   }
 

@@ -52,3 +52,34 @@ export class ValidationError extends AppError {
     this.name = "ValidationError";
   }
 }
+
+/**
+ * Account-specific error classes for authentication
+ */
+
+export class AccountLockedError extends AppError {
+  constructor(
+    public minutesUntilUnlock: number,
+    message?: string
+  ) {
+    super(429, "ACCOUNT_LOCKED", message || `Account locked. Try again in ${minutesUntilUnlock} minutes.`);
+    this.name = "AccountLockedError";
+  }
+}
+
+export class OTPLockedError extends AppError {
+  constructor(
+    public minutesUntilUnlock: number,
+    message?: string
+  ) {
+    super(429, "OTP_LOCKED", message || `Too many failed OTP attempts. Try again in ${minutesUntilUnlock} minutes.`);
+    this.name = "OTPLockedError";
+  }
+}
+
+export class AccountDisabledError extends AppError {
+  constructor(reason: string) {
+    super(403, "ACCOUNT_DISABLED", `Your account is currently ${reason}`);
+    this.name = "AccountDisabledError";
+  }
+}

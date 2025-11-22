@@ -38,6 +38,8 @@ export const authRepository = {
         role: true,
         verified: true,
         status: true,
+        failedLoginAttempts: true,
+        lockedUntil: true,
         createdAt: true,
       },
     });
@@ -150,6 +152,7 @@ export const authRepository = {
         identifier: true,
         otp: true,
         expires: true,
+        attempts: true,
       },
     });
   },
@@ -170,6 +173,88 @@ export const authRepository = {
   deleteVerificationOTPsByEmail: async (email: string) => {
     return prisma.verificationToken.deleteMany({
       where: { identifier: email.toLowerCase() },
+    });
+  },
+
+  /**
+   * Increment OTP attempt counter
+   */
+  incrementOTPAttempts: async (email: string) => {
+    return prisma.verificationToken.updateMany({
+      where: { identifier: email.toLowerCase() },
+      data: { attempts: { increment: 1 } },
+    });
+  },
+
+  /**
+   * Lock OTP verification for an email
+   */
+  lockOTPVerification: async (email: string, durationMs: number) => {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      throw new Error("durationMs must be a positive number");
+    }
+    const lockedUntil = new Date(Date.now() + durationMs);
+    return prisma.verificationToken.updateMany({
+      where: { identifier: email.toLowerCase() },
+      data: { lockedUntil },
+    });
+  },
+
+  /**
+   * Check if OTP verification is locked for an email
+   */
+  isOTPLocked: async (email: string) => {
+    const token = await prisma.verificationToken.findFirst({
+      where: {
+        identifier: email.toLowerCase(),
+        lockedUntil: { gt: new Date() },
+      },
+    });
+    return Boolean(token);
+  },
+
+  /**
+   * Increment failed login attempts
+   */
+  incrementFailedLoginAttempts: async (email: string) => {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { id: true, failedLoginAttempts: true },
+    });
+  },
+
+  /**
+   * Lock user account
+   */
+  lockAccount: async (userId: string, durationMs: number) => {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      throw new Error("durationMs must be a positive number");
+    }
+    const lockedUntil = new Date(Date.now() + durationMs);
+    return prisma.user.update({
+      where: { id: userId },
+      data: { lockedUntil },
+      select: { id: true, lockedUntil: true },
+    });
+  },
+
+  /**
+   * Reset failed login attempts
+   */
+  resetFailedLoginAttempts: async (userId: string) => {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { failedLoginAttempts: 0 },
+      select: { id: true, failedLoginAttempts: true },
     });
   },
 };
