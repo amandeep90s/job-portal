@@ -38,8 +38,27 @@ const AUTH_ONLY_ROUTES = ["/sign-up", "/sign-in", "/forgot-password", "/reset-pa
 
 /**
  * Public routes that don't require authentication
+ * These are exact matches only - no prefix matching
  */
 const PUBLIC_ROUTES = ["/", "/sign-up", "/sign-in", "/forgot-password", "/verify-email", "/reset-password"];
+
+/**
+ * Helper function to safely check if a pathname matches a public route
+ * Uses exact matching to prevent security issues like /sign-in matching /sign-in-test
+ *
+ * @param pathname - The current pathname
+ * @returns true if pathname matches a public route exactly or is a query-string variant
+ */
+function isPublicRoute(pathname: string): boolean {
+  // Exact match check
+  if (PUBLIC_ROUTES.includes(pathname)) {
+    return true;
+  }
+
+  // Allow query parameters and fragments: /verify-email?email=test is still a public route
+  const basePathname = pathname.split("?")[0];
+  return PUBLIC_ROUTES.includes(basePathname);
+}
 
 interface SessionData {
   userId: string;
@@ -102,7 +121,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Allow public routes if user is not authenticated
-  if (!sessionData && PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route))) {
+  if (!sessionData && isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
