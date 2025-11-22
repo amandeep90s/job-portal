@@ -146,13 +146,28 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 /**
  * Configure which routes the proxy should run on
  * Using the standard config export pattern
+ *
+ * Only runs on routes that actually need authentication checks:
+ * - Protected routes: /employer/*, /job-seeker/*
+ * - Auth-only routes: /sign-in, /sign-up, /forgot-password, /reset-password (to redirect authenticated users)
+ * - Verify email routes: /verify-email (to redirect authenticated users here if unverified)
+ *
+ * Does NOT run on:
+ * - Public content routes: /, /companies/*, /jobs/* (no auth needed)
+ * - API routes: /api/* (separate auth handling)
+ * - Static assets: /_next/*, /favicon.ico (no auth needed)
  */
 export const config = {
   matcher: [
-    // Protected routes
+    // Protected routes that require authentication
     "/employer/:path*",
     "/job-seeker/:path*",
-    // Exclude static files and api routes
-    "/((?!_next/static|_next/image|favicon.ico|api/).*)",
+    // Auth-only routes (to redirect authenticated users away)
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/reset-password",
+    // Verification routes
+    "/verify-email",
   ],
 };
